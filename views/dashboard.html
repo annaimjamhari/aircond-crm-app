@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Dashboard</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .navbar-item {
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: var(--dark);
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        
+        .navbar-item:hover {
+            background: var(--light);
+        }
+        
+        .navbar-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .card-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title {
+            margin: 0;
+            color: var(--dark);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .color-primary { color: var(--primary); }
+        .color-success { color: var(--success); }
+        .color-warning { color: var(--warning); }
+        .color-danger { color: var(--danger); }
+        
+        .recent-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .recent-table th,
+        .recent-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .recent-table th {
+            background: var(--light);
+            color: var(--dark);
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .stage-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .stage-prospecting { background: #dbeafe; color: #1e40af; }
+        .stage-qualification { background: #fef3c7; color: #92400e; }
+        .stage-proposal { background: #d1fae5; color: #065f46; }
+        .stage-negotiation { background: #fef3c7; color: #92400e; }
+        .stage-closed-won { background: #d1fae5; color: #065f46; }
+        .stage-closed-lost { background: #fee2e2; color: #991b1b; }
+        
+        .priority-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .priority-low { background: #d1fae5; color: #065f46; }
+        .priority-medium { background: #fef3c7; color: #92400e; }
+        .priority-high { background: #fee2e2; color:991b1b; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📊 CRM System</div>
+        <div class="navbar-menu">
+            <a href="/dashboard" class="navbar-item active">Dashboard</a>
+            <a href="/customers" class="navbar-item">Customers</a>
+            <a href="/contacts" class="navbar-item">Contacts</a>
+            <a href="/opportunities" class="navbar-item">Opportunities</a>
+            <a href="/activities" class="navbar-item">Activities</a>
+            <a href="/reports" class="navbar-item">Reports</a>
+            <a href="/settings" class="navbar-item">Settings</a>
+            <a href="/logout" class="navbar-item">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>Welcome to CRM Dashboard</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Customers</div>
+                <div id="totalCustomers" class="stat-value color-primary">0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Total Opportunities</div>
+                <div id="totalOpportunities" class="stat-value color-success">0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Active Activities</div>
+                <div id="totalActivities" class="stat-value color-warning">0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Total Pipeline Value</div>
+                <div id="totalValue" class="stat-value color-danger">$0</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📈 Sales Pipeline</h3>
+                </div>
+                <div id="pipelineChart">
+                    <p>Loading pipeline data...</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📋 Recent Activities</h3>
+                </div>
+                <div id="recentActivities">
+                    <p>Loading activities...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🎯 Top Opportunities</h3>
+            </div>
+            <div id="topOpportunities">
+                <p>Loading opportunities...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const stats = await response.json();
+                
+                // Update stat cards
+                document.getElementById('totalCustomers').textContent = stats.totalCustomers;
+                document.getElementById('totalOpportunities').textContent = stats.totalOpportunities;
+                document.getElementById('totalActivities').textContent = stats.totalActivities;
+                
+                // Calculate total pipeline value
+                const totalValue = stats.opportunitiesByStage.reduce((sum, stage) => sum + (stage.total_value || 0), 0);
+                document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString()}`;
+                
+                // Render pipeline chart
+                const pipelineHtml = stats.opportunitiesByStage.map(stage => `
+                    <div style="margin-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <span>${stage.stage}</span>
+                            <span>${stage.count} ($${(stage.total_value || 0).toLocaleString()})</span>
+                        </div>
+                        <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: ${stage.count * 10}%; height: 100%;"></div>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('pipelineChart').innerHTML = pipelineHtml;
+                
+                // Render recent activities
+                const activitiesHtml = stats.recentActivities.map(activity => `
+                    <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong>${activity.subject}</strong>
+                            <span class="priority-badge priority-${activity.priority}">${activity.priority}</span>
+                        </div>
+                        <div style="color: #666; font-size: 0.9rem;">
+                            ${activity.description || 'No description'}
+                        </div>
+                        <div style="color: #999; font-size: 0.8rem; margin-top: 0.25rem;">
+                            Due: ${new Date(activity.due_date).toLocaleDateString()}
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('recentActivities').innerHTML = activitiesHtml;
+                
+                // Render top opportunities
+                const opportunitiesHtml = stats.topOpportunities.map(opp => `
+                    <div style="padding: 0.75rem; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong>${opp.title}</strong>
+                            <span class="stage-badge stage-${opp.stage.replace(/-/g, '')}">${opp.stage}</span>
+                        </div>
+                        <div style="color: #666; font-size: 0.9rem;">
+                            Customer: ${opp.customer_name}
+                        </div>
+                        <div style="color: #999; font-size: 0.8rem; margin-top: 0.25rem;">
+                            Value: $${opp.value.toLocaleString()} | Probability: ${opp.probability}%
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('topOpportunities').innerHTML = opportunitiesHtml;
+                
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+        
+        // Load dashboard data on page load
+        document.addEventListener('DOMContentLoaded', loadDashboardStats);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboardStats, 30000);
+    </script>
+</body>
+</html>

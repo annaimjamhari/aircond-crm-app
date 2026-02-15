@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM - Customers</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .navbar-item {
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: var(--dark);
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        
+        .navbar-item:hover {
+            background: var(--light);
+        }
+        
+        .navbar-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background: var(--light);
+            color: var(--dark);
+            font-weight: 600;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            color: #999;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📊 CRM System</div>
+        <div class="navbar-menu">
+            <a href="/dashboard" class="navbar-item">Dashboard</a>
+            <a href="/customers" class="navbar-item active">Customers</a>
+            <a href="/contacts" class="navbar-item">Contacts</a>
+            <a href="/opportunities" class="navbar-item">Opportunities</a>
+            <a href="/activities" class="navbar-item">Activities</a>
+            <a href="/reports" class="navbar-item">Reports</a>
+            <a href="/settings" class="navbar-item">Settings</a>
+            <a href="/logout" class="navbar-item">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="header-actions">
+            <h1>👥 Customers</h1>
+            <button class="btn btn-primary" onclick="openAddCustomerModal()">+ Add Customer</button>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Notes</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customersTableBody">
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <h3>No customers yet</h3>
+                            <p>Add your first customer to get started</p>
+                            <button class="btn btn-primary" onclick="openAddCustomerModal()">Add Customer</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Customer Modal -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Customer</h2>
+                <button class="modal-close" onclick="closeCustomerModal()">×</button>
+            </div>
+            
+            <form id="customerForm">
+                <input type="hidden" id="customerId">
+                
+                <div class="form-group">
+                    <label for="customerName">Name *</label>
+                    <input type="text" id="customerName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerPhone">Phone *</label>
+                    <input type="tel" id="customerPhone" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerEmail">Email</label>
+                    <input type="email" id="customerEmail" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerAddress">Address</label>
+                    <textarea id="customerAddress" class="form-control" rows="2"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerNotes">Notes</label>
+                    <textarea id="customerNotes" class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn" onclick="closeCustomerModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let customersData = [];
+        let editingCustomerId = null;
+        
+        async function loadCustomers() {
+            try {
+                const response = await fetch('/api/customers');
+                customersData = await response.json();
+                renderCustomersTable();
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                showError('Failed to load customers');
+            }
+        }
+        
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customersTableBody');
+            
+            if (customersData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <h3>No customers yet</h3>
+                            <p>Add your first customer to get started</p>
+                            <button class="btn btn-primary" onclick="openAddCustomerModal()">Add Customer</button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            const rowsHtml = customersData.map(customer => `
+                <tr>
+                    <td>${customer.id}</td>
+                    <td><strong>${customer.name}</strong></td>
+                    <td>${customer.phone}</td>
+                    <td>${customer.email || '-'}</td>
+                    <td>${customer.address || '-'}</td>
+                    <td>${customer.notes ? customer.notes.substring(0, 50) + '...' : '-'}</td>
+                    <td>${new Date(customer.created_at).toLocaleDateString()}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-sm" onclick="editCustomer(${customer.id})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            tbody.innerHTML = rowsHtml;
+        }
+        
+        function openAddCustomerModal() {
+            editingCustomerId = null;
+            document.getElementById('modalTitle').textContent = 'Add Customer';
+            document.getElementById('customerId').value = '';
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('customerAddress').value = '';
+            document.getElementById('customerNotes').value = '';
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+        
+        function openEditCustomerModal(customer) {
+            editingCustomerId = customer.id;
+            document.getElementById('modalTitle').textContent = 'Edit Customer';
+            document.getElementById('customerId').value = customer.id;
+            document.getElementById('customerName').value = customer.name;
+           .getElementById('customerPhone').value = customer.phone;
+            document.getElementById('customerEmail').value = customer.email || '';
+            document.getElementById('customerAddress').value = customer.address || '';
+            document.getElementById('customerNotes').value = customer.notes || '';
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+        
+        function closeCustomerModal() {
+            document.getElementById('customerModal').style.display = 'none';
+        }
+        
+        async function editCustomer(id) {
+            const customer = customersData.find(c => c.id === id);
+            if (customer) {
+                openEditCustomerModal(customer);
+            }
+        }
+        
+        async function deleteCustomer(id) {
+            if (confirm('Are you sure you want to delete this customer?')) {
+                try {
+                    const response = await fetch(`/api/customers/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        loadCustomers();
+                        showSuccess('Customer deleted successfully');
+                    } else {
+                        showError('Failed to delete customer');
+                    }
+                } catch (error) {
+                    console.error('Error deleting customer:', error);
+                    showError('Failed to delete customer');
+                }
+            }
+        }
+        
+        document.getElementById('customerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const customerData = {
+                name: document.getElementById('customerName').value,
+                phone: document.getElementById('customerPhone').value,
+                email: document.getElementById('customerEmail').value,
+                address: document.getElementById('customerAddress').value,
+                notes: document.getElementById('customerNotes').value
+            };
+            
+            const id = document.getElementById('customerId').value;
+            const isEdit = id && id !== '';
+            
+            try {
+                const url = isEdit ? `/api/customers/${id}` : '/api/customers';
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(customerData)
+                });
+                
+                if (response.ok) {
+                    loadCustomers();
+                    closeCustomerModal();
+                    showSuccess(isEdit ? 'Customer updated successfully' : 'Customer added successfully');
+                } else {
+                    showError(isEdit ? 'Failed to update customer' : 'Failed to add customer');
+                }
+            } catch (error) {
+                console.error('Error saving customer:', error);
+                showError(isEdit ? 'Failed to update customer' : 'Failed to add customer');
+            }
+        });
+        
+        function showError(message) {
+            alert(`Error: ${message}`);
+        }
+        
+        function showSuccess(message) {
+            alert(`Success: ${message}`);
+        }
+        
+        // Load customers on page load
+        document.addEventListener('DOMContentLoaded', loadCustomers);
+        
+        // Close modal on outside click
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('customerModal');
+            if (event.target === modal) {
+                closeCustomerModal();
+            }
+        });
+    </script>
+</body>
+</html>

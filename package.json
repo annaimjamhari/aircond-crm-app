@@ -1,0 +1,30 @@
+{
+  "name": "crm-app",
+  "version": "1.0.0",
+  "description": "Basic CRM Web Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "vercel-build": "echo 'Building for Vercel...'"
+  },
+  "keywords": [
+    "crm",
+    "webapp",
+    "nodejs",
+    "express"
+  ],
+  "author": "Anna",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.0",
+    "express-session": "^1.19.0",
+    "bcryptjs": "^3.0.3",
+    "body-parser": "^2.2.2",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
