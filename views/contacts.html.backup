@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM - Contacts</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .navbar-item {
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: var(--dark);
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        
+        .navbar-item:hover {
+            background: var(--light);
+        }
+        
+        .navbar-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background: var(--light);
+            color: var(--dark);
+            font-weight: 600;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📊 CRM System</div>
+        <div class="navbar-menu">
+            <a href="/dashboard" class="navbar-item">Dashboard</a>
+            <a href="/customers" class="navbar-item">Customers</a>
+            <a href="/contacts" class="navbar-item active">Contacts</a>
+            <a href="/opportunities" class="navbar-item">Opportunities</a>
+            <a href="/activities" class="navbar-item">Activities</a>
+            <a href="/reports" class="navbar-item">Reports</a>
+            <a href="/settings" class="navbar-item">Settings</a>
+            <a href="/logout" class="navbar-item">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="header-actions">
+            <h1>📇 Contacts</h1>
+            <button class="btn btn-primary" onclick="openAddContactModal()">+ Add Contact</button>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Customer</th>
+                        <th>Notes</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contactsTableBody">
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <h3>No contacts yet</h3>
+                            <p>Add your first contact to get started</p>
+                            <button class="btn btn-primary" onclick="openAddContactModal()">Add Contact</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        async function loadContacts() {
+            try {
+                const response = await fetch('/api/contacts');
+                const contacts = await response.json();
+                renderContactsTable(contacts);
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+        
+        function renderContactsTable(contacts) {
+            const tbody = document.getElementById('contactsTableBody');
+            
+            if (contacts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <h3>No contacts yet</h3>
+                            <p>Add your first contact to get started</p>
+                            <button class="btn btn-primary" onclick="openAddContactModal()">Add Contact</button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            const rowsHtml = contacts.map(contact => `
+                <tr>
+                    <td>${contact.id}</td>
+                    <td><strong>${contact.contact_name}</strong></td>
+                    <td>${contact.position || '-'}</td>
+                   td><td>${contact.phone || '-'}</td>
+                    <td>${contact.email || '-'}</td>
+                    <td>${contact.customer_name || '-'}</td>
+                    <td>${contact.notes ? contact.notes.substring(0, 30) + '...' : '-'}</td>
+                    <td>${new Date(contact.created_at).toLocaleDateString()}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-sm" onclick="editContact(${contact.id})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteContact(${contact.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            tbody.innerHTML = rowsHtml;
+        }
+        
+        // Load contacts on page load
+        document.addEventListener('DOMContentLoaded', loadContacts);
+    </script>
+</body>
+</html>
