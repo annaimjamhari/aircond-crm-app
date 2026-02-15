@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - CRM System</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-snowflake text-blue-500 text-2xl"></i>
+                <h1 class="text-xl font-bold text-gray-800">CoolFix CRM</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/dashboard" class="text-gray-600 hover:text-blue-500"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/customers" class="text-gray-600 hover:text-blue-500"><i class="fas fa-users"></i> Customers</a>
+                <a href="/contacts" class="text-gray-600 hover:text-blue-500"><i class="fas fa-address-book"></i> Contacts</a>
+                <a href="/opportunities" class="text-gray-600 hover:text-blue-500"><i class="fas fa-chart-line"></i> Opportunities</a>
+                <a href="/activities" class="text-gray-600 hover:text-blue-500"><i class="fas fa-tasks"></i> Activities</a>
+                <a href="/reports" class="text-blue-500 font-semibold"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="/settings" class="text-gray-600 hover:text-blue-500"><i class="fas fa-cog"></i> Settings</a>
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Analytics & Reports</h2>
+            <div class="flex space-x-2">
+                <select id="reportPeriod" class="p-2 border rounded">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last Year</option>
+                </select>
+                <button onclick="loadReports()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-users text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Customers</p>
+                        <p id="totalCustomers" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-chart-line text-green-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Open Opportunities</p>
+                        <p id="openOpportunities" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-tasks text-purple-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Pending Activities</p>
+                        <p id="pendingActivities" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <i class="fas fa-dollar-sign text-orange-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Pipeline Value</p>
+                        <p id="pipelineValue" class="text-2xl font-bold">$0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Opportunities by Stage</h3>
+                <div class="h-64">
+                    <canvas id="opportunityStageChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Customer Growth</h3>
+                <div class="h-64">
+                    <canvas id="customerGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Activity Types Distribution</h3>
+                <div class="h-64">
+                    <canvas id="activityTypeChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Revenue Forecast</h3>
+                <div class="h-64">
+                    <canvas id="revenueForecastChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Reports -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+            <div class="p-6 border-b">
+                <h3 class="text-lg font-semibold">Recent Opportunities</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-3 text-left">Title</th>
+                            <th class="p-3 text-left">Customer</th>
+                            <th class="p-3 text-left">Stage</th>
+                            <th class="p-3 text-left">Value</th>
+                            <th class="p-3 text-left">Probability</th>
+                            <th class="p-3 text-left">Expected Close</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOpportunitiesTable">
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-gray-500">
+                                <i class="fas fa-spinner fa-spin"></i> Loading opportunities...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="grid grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Conversion Rate</h3>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-green-600 mb-2" id="conversionRate">0%</div>
+                    <p class="text-sm text-gray-600">Opportunities won vs total</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Average Deal Size</h3>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-blue-600 mb-2" id="averageDealSize">$0</div>
+                    <p class="text-sm text-gray-600">Average value per won deal</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Activity Completion</h3>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-600 mb-2" id="activityCompletion">0%</div>
+                    <p class="text-sm text-gray-600">Completed vs total activities</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let opportunityStageChart, customerGrowthChart, activityTypeChart, revenueForecastChart;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReports();
+        });
+
+        function loadReports() {
+            const period = document.getElementById('reportPeriod').value;
+            
+            // Load summary data
+            fetch('/api/reports/summary?period=' + period)
+                .then(response => response.json())
+                .then(data => {
+                    updateSummaryCards(data);
+                    updateCharts(data);
+                });
+
+            // Load recent opportunities
+            fetch('/api/opportunities?limit=5')
+                .then(response => response.json())
+                .then(data => {
+                    updateRecentOpportunitiesTable(data);
+                });
+        }
+
+        function updateSummaryCards(data) {
+            document.getElementById('totalCustomers').textContent = data.totalCustomers || 0;
+            document.getElementById('openOpportunities').textContent = data.openOpportunities || 0;
+            document.getElementById('pendingActivities').textContent = data.pendingActivities || 0;
+            document.getElementById('pipelineValue').textContent = '$' + (data.pipelineValue || 0).toLocaleString();
+            
+            // Update performance metrics
+            document.getElementById('conversionRate').textContent = (data.conversionRate || 0) + '%';
+            document.getElementById('averageDealSize').textContent = '$' + (data.averageDealSize || 0).toLocaleString();
+            document.getElementById('activityCompletion').textContent = (data.activityCompletion || 0) + '%';
+        }
+
+        function updateCharts(data) {
+            // Opportunity Stage Chart
+            if (opportunityStageChart) opportunityStageChart.destroy();
+            const stageCtx = document.getElementById('opportunityStageChart').getContext('2d');
+            opportunityStageChart = new Chart(stageCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.opportunityStages?.labels || [],
+                    datasets: [{
+                        data: data.opportunityStages?.data || [],
+                        backgroundColor: [
+                            '#3B82F6', // blue
+                            '#10B981', // green
+                            '#F59E0B', // yellow
+                            '#EF4444', // red
+                            '#8B5CF6', // purple
+                            '#EC4899'  // pink
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+
+            // Customer Growth Chart
+            if (customerGrowthChart) customerGrowthChart.destroy();
+            const growthCtx = document.getElementById('customerGrowthChart').getContext('2d');
+            customerGrowthChart = new Chart(growthCtx, {
+                type: 'line',
+                data: {
+                    labels: data.customerGrowth?.labels || [],
+                    datasets: [{
+                        label: 'New Customers',
+                        data: data.customerGrowth?.data || [],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Activity Type Chart
+            if (activityTypeChart) activityTypeChart.destroy();
+            const activityCtx = document.getElementById('activityTypeChart').getContext('2d');
+            activityTypeChart = new Chart(activityCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.activityTypes?.labels || [],
+                    datasets: [{
+                        label: 'Count',
+                        data: data.activityTypes?.data || [],
+                        backgroundColor: [
+                            '#3B82F6', // call
+                            '#10B981', // meeting
+                            '#F59E0B', // email
+                            '#8B5CF6'  // task
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Revenue Forecast Chart
+            if (revenueForecastChart) revenueForecastChart.destroy();
+            const revenueCtx = document.getElementById('revenueForecastChart').getContext('2d');
+            revenueForecastChart = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: data.revenueForecast?.labels || [],
+                    datasets: [{
+                        label: 'Forecasted Revenue',
+                        data: data.revenueForecast?.data || [],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRecentOpportunitiesTable(opportunities) {
+            const table = document.getElementById('recentOpportunitiesTable');
+            if (opportunities.length === 0) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-500">
+                            <i class="fas fa-inbox"></i> No opportunities found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            opportunities.forEach(opp => {
+                const closeDate = opp.expected_close_date ? new Date(opp.expected_close_date) : null;
+                
+                let stageColor = 'bg-gray-100 text-gray-800';
+                if (opp.stage === 'closed-won') stageColor = 'bg-green-100 text-green-800';
+                else if (opp.stage === 'closed-lost') stageColor = 'bg-red-100 text-red-800';
+                else if (opp.stage === 'negotiation') stageColor = 'bg-yellow-100 text-yellow-800';
+                else if (opp.stage === 'proposal') stageColor = 'bg-blue-100 text-blue-800';
+
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-medium">${opp.title}</td>
+                        <td class="p-3">${opp.customer_name || 'N/A'}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-full text-xs ${stageColor}">
+                                ${opp.stage.replace('-', ' ').toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="p-3 font-semibold">$${opp.value ? opp.value.toLocaleString() : '0'}</td>
+                        <td class="p-3">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${opp.probability || 0}%"></div>
+                            </div>
+                            <span class="text-xs">${opp.probability || 0}%</span>
+                        </td>
+                        <td class="p-3">${closeDate ? formatDate(closeDate) : 'Not set'}</td>
+                    </tr>
+                `;
+            });
+            table.innerHTML = html;
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .then(() => window.location.href = '/login');
+        }
+    </script>
+</body>
+</html>

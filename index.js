@@ -347,6 +347,42 @@ app.post('/api/activities', requireAuth, (req, res) => {
     );
 });
 
+// Get single activity
+app.get('/api/activities/:id', requireAuth, (req, res) => {
+    db.get(`
+        SELECT a.*, cu.name as customer_name, op.title as opportunity_title
+        FROM activities a
+        LEFT JOIN customers cu ON a.customer_id = cu.id
+        LEFT JOIN opportunities op ON a.opportunity_id = op.id
+        WHERE a.id = ?
+    `, [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Activity not found' });
+        res.json(row);
+    });
+});
+
+// Update activity
+app.put('/api/activities/:id', requireAuth, (req, res) => {
+    const { type, subject, description, due_date, status, priority, notes } = req.body;
+    db.run(
+        'UPDATE activities SET type=?, subject=?, description=?, due_date=?, status=?, priority=?, notes=? WHERE id=?',
+        [type, subject, description, due_date, status, priority, notes, req.params.id],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Activity updated successfully' });
+        }
+    );
+});
+
+// Delete activity
+app.delete('/api/activities/:id', requireAuth, (req, res) => {
+    db.run('DELETE FROM activities WHERE id = ?', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Activity deleted successfully' });
+    });
+});
+
 // ----- DASHBOARD STATS API -----
 
 // Get dashboard statistics

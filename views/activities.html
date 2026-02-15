@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activities - CRM System</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-snowflake text-blue-500 text-2xl"></i>
+                <h1 class="text-xl font-bold text-gray-800">CoolFix CRM</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/dashboard" class="text-gray-600 hover:text-blue-500"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/customers" class="text-gray-600 hover:text-blue-500"><i class="fas fa-users"></i> Customers</a>
+                <a href="/contacts" class="text-gray-600 hover:text-blue-500"><i class="fas fa-address-book"></i> Contacts</a>
+                <a href="/opportunities" class="text-gray-600 hover:text-blue-500"><i class="fas fa-chart-line"></i> Opportunities</a>
+                <a href="/activities" class="text-blue-500 font-semibold"><i class="fas fa-tasks"></i> Activities</a>
+                <a href="/reports" class="text-gray-600 hover:text-blue-500"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="/settings" class="text-gray-600 hover:text-blue-500"><i class="fas fa-cog"></i> Settings</a>
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Activities & Tasks</h2>
+            <button onclick="openAddActivityModal()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                <i class="fas fa-plus"></i> Add Activity
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="grid grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select id="filterType" class="w-full p-2 border rounded">
+                        <option value="">All Types</option>
+                        <option value="call">Call</option>
+                        <option value="meeting">Meeting</option>
+                        <option value="email">Email</option>
+                        <option value="task">Task</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="filterStatus" class="w-full p-2 border rounded">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select id="filterPriority" class="w-full p-2 border rounded">
+                        <option value="">All Priorities</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 w-full">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activities Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-3 text-left">Subject</th>
+                        <th class="p-3 text-left">Type</th>
+                        <th class="p-3 text-left">Customer</th>
+                        <th class="p-3 text-left">Due Date</th>
+                        <th class="p-3 text-left">Status</th>
+                        <th class="p-3 text-left">Priority</th>
+                        <th class="p-3 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="activitiesTable">
+                    <!-- Activities will be loaded here -->
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin"></i> Loading activities...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Activity Statistics -->
+        <div class="grid grid-cols-4 gap-6 mt-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-tasks text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Activities</p>
+                        <p id="totalActivities" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Completed</p>
+                        <p id="completedActivities" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <i class="fas fa-clock text-yellow-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Pending</p>
+                        <p id="pendingActivities" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Overdue</p>
+                        <p id="overdueActivities" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Activity Modal -->
+    <div id="addActivityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl font-bold">Add New Activity</h3>
+                <button onclick="closeAddActivityModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="addActivityForm">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                            <select name="type" required class="w-full p-2 border rounded">
+                                <option value="">Select Type</option>
+                                <option value="call">Call</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="email">Email</option>
+                                <option value="task">Task</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                            <input type="text" name="subject" required class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                            <select name="customer_id" class="w-full p-2 border rounded">
+                                <option value="">Select Customer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Opportunity</label>
+                            <select name="opportunity_id" class="w-full p-2 border rounded">
+                                <option value="">Select Opportunity</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                            <input type="date" name="due_date" required class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select name="priority" class="w-full p-2 border rounded">
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="description" rows="3" class="w-full p-2 border rounded"></textarea>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea name="notes" rows="2" class="w-full p-2 border rounded"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="flex justify-end p-6 border-t">
+                <button onclick="closeAddActivityModal()" class="px-4 py-2 border rounded mr-2">Cancel</button>
+                <button onclick="saveActivity()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Activity</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Activity Modal -->
+    <div id="editActivityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl font-bold">Edit Activity</h3>
+                <button onclick="closeEditActivityModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="editActivityForm">
+                    <input type="hidden" name="id">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                            <select name="type" required class="w-full p-2 border rounded">
+                                <option value="call">Call</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="email">Email</option>
+                                <option value="task">Task</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                            <input type="text" name="subject" required class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select name="status" class="w-full p-2 border rounded">
+                                <option value="pending">Pending</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select name="priority" class="w-full p-2 border rounded">
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="description" rows="3" class="w-full p-2 border rounded"></textarea>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea name="notes" rows="2" class="w-full p-2 border rounded"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="flex justify-end p-6 border-t">
+                <button onclick="closeEditActivityModal()" class="px-4 py-2 border rounded mr-2">Cancel</button>
+                <button onclick="updateActivity()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Activity</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        // Load activities on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadActivities();
+            loadCustomersForDropdown();
+            loadOpportunitiesForDropdown();
+        });
+
+        function loadActivities() {
+            fetch('/api/activities')
+                .then(response => response.json())
+                .then(data => {
+                    updateActivitiesTable(data);
+                    updateActivityStats(data);
+                })
+                .catch(error => {
+                    console.error('Error loading activities:', error);
+                    document.getElementById('activitiesTable').innerHTML = `
+                        <tr>
+                            <td colspan="7" class="p-8 text-center text-red-500">
+                                <i class="fas fa-exclamation-circle"></i> Error loading activities
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        function updateActivitiesTable(activities) {
+            const table = document.getElementById('activitiesTable');
+            if (activities.length === 0) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-gray-500">
+                            <i class="fas fa-inbox"></i> No activities found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            activities.forEach(activity => {
+                const dueDate = new Date(activity.due_date);
+                const today = new Date();
+                const isOverdue = dueDate < today && activity.status !== 'completed';
+                
+                let priorityColor = 'bg-gray-100 text-gray-800';
+                if (activity.priority === 'high') priorityColor = 'bg-red-100 text-red-800';
+                else if (activity.priority === 'medium') priorityColor = 'bg-yellow-100 text-yellow-800';
+                else if (activity.priority === 'low') priorityColor = 'bg-green-100 text-green-800';
+
+                let statusColor = 'bg-gray-100 text-gray-800';
+                if (activity.status === 'completed') statusColor = 'bg-green-100 text-green-800';
+                else if (activity.status === 'in-progress') statusColor = 'bg-blue-100 text-blue-800';
+                else if (activity.status === 'pending') statusColor = 'bg-yellow-100 text-yellow-800';
+
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3">
+                            <div class="font-medium">${activity.subject}</div>
+                            <div class="text-sm text-gray-600">${activity.description || 'No description'}</div>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-full text-xs ${getTypeColor(activity.type)}">
+                                ${activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}
+                            </span>
+                        </td>
+                        <td class="p-3">${activity.customer_name || 'N/A'}</td>
+                        <td class="p-3 ${isOverdue ? 'text-red-600 font-semibold' : ''}">
+                            ${formatDate(dueDate)}
+                            ${isOverdue ? '<span class="text-xs ml-1">(Overdue)</span>' : ''}
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-full text-xs ${statusColor}">
+                                ${activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-full text-xs ${priorityColor}">
+                                ${activity.priority.charAt(0).toUpperCase() + activity.priority.slice(1)}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <button onclick="editActivity(${activity.id})" class="text-blue-500 hover:text-blue-700 mr-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteActivity(${activity.id})" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            table.innerHTML = html;
+        }
+
+        function getTypeColor(type) {
+            switch(type) {
+                case 'call': return 'bg-blue-100 text-blue-800';
+                case 'meeting': return 'bg-purple-100 text-purple-800';
+                case 'email': return 'bg-green-100 text-green-800';
+                case 'task': return 'bg-orange-100 text-orange-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function updateActivityStats(activities) {
+            const total = activities.length;
+            const completed = activities.filter(a => a.status === 'completed').length;
+            const pending = activities.filter(a => a.status === 'pending').length;
+            
+            const today = new Date();
+            const overdue = activities.filter(a => {
+                const dueDate = new Date(a.due_date);
+                return dueDate < today && a.status !== 'completed';
+            }).length;
+
+            document.getElementById('totalActivities').textContent = total;
+            document.getElementById('completedActivities').textContent = completed;
+            document.getElementById('pendingActivities').textContent = pending;
+            document.getElementById('overdueActivities').textContent = overdue;
+        }
+
+        function loadCustomersForDropdown() {
+            fetch('/api/customers')
+                .then(response => response.json())
+                .then(customers => {
+                    const select = document.querySelector('select[name="customer_id"]');
+                    let html = '<option value="">Select Customer</option>';
+                    customers.forEach(customer => {
+                        html += `<option value="${customer.id}">${customer.name}</option>`;
+                    });
+                    select.innerHTML = html;
+                });
+        }
+
+        function loadOpportunitiesForDropdown() {
+            fetch('/api/opportunities')
+                .then(response => response.json())
+                .then(opportunities => {
+                    const select = document.querySelector('select[name="opportunity_id"]');
+                    let html = '<option value="">Select Opportunity</option>';
+                    opportunities.forEach(opp => {
+                        html += `<option value="${opp.id}">${opp.title}</option>`;
+                    });
+                    select.innerHTML = html;
+                });
+        }
+
+        function openAddActivityModal() {
+            document.getElementById('addActivityModal').classList.remove('hidden');
+            document.getElementById('addActivityModal').classList.add('flex');
+        }
+
+        function closeAddActivityModal() {
+            document.getElementById('addActivityModal').classList.add('hidden');
+            document.getElementById('addActivityModal').classList.remove('flex');
+            document.getElementById('addActivityForm').reset();
+        }
+
+        function openEditActivityModal() {
+            document.getElementById('editActivityModal').classList.remove('hidden');
+            document.getElementById('editActivityModal').classList.add('flex');
+        }
+
+        function closeEditActivityModal() {
+            document.getElementById('editActivityModal').classList.add('hidden');
+            document.getElementById('editActivityModal').classList.remove('flex');
+        }
+
+        function editActivity(id) {
+            fetch(`/api/activities/${id}`)
+                .then(response => response.json())
+                .then(activity => {
+                    const form = document.getElementById('editActivityForm');
+                    form.querySelector('input[name="id"]').value = activity.id;
+                    form.querySelector('select[name="type"]').value = activity.type;
+                    form.querySelector('input[name="subject"]').value = activity.subject;
+                    form.querySelector('select[name="status"]').value = activity.status;
+                    form.querySelector('select[name="priority"]').value = activity.priority;
+                    form.querySelector('textarea[name="description"]').value = activity.description || '';
+                    form.querySelector('textarea[name="notes"]').value = activity.notes || '';
+                    openEditActivityModal();
+                });
+        }
+
+        function saveActivity() {
+            const form = document.getElementById('addActivityForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('/api/activities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message || 'Activity added successfully');
+                closeAddActivityModal();
+                loadActivities();
+                loadCustomersForDropdown();
+                loadOpportunitiesForDropdown();
+            })
+            .catch(error => {
+                alert('Error saving activity: ' + error.message);
+            });
+        }
+
+        function updateActivity() {
+            const form = document.getElementById('editActivityForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(`/api/activities/${data.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message || 'Activity updated successfully');
+                closeEditActivityModal();
+                loadActivities();
+            })
+            .catch(error => {
+                alert('Error updating activity: ' + error.message);
+            });
+        }
+
+        function deleteActivity(id) {
+            if (!confirm('Are you sure you want to delete this activity?')) return;
+
+            fetch(`/api/activities/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message || 'Activity deleted successfully');
+                loadActivities();
+            })
+            .catch(error => {
+                alert('Error deleting activity: ' + error.message);
+            });
+        }
+
+        function applyFilters() {
+            const type = document.getElementById('filterType').value;
+            const status = document.getElementById('filterStatus').value;
+            const priority = document.getElementById('filterPriority').value;
+
+            let url = '/api/activities';
+            const params = [];
+            if (type) params.push(`type=${type}`);
+            if (status) params.push(`status=${status}`);
+            if (priority) params.push(`priority=${priority}`);
+
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    updateActivitiesTable(data);
+                    updateActivityStats(data);
+                });
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .then(() => window.location.href = '/login');
+        }
+    </script>
+</body>
+</html>
