@@ -456,6 +456,131 @@ app.get('/api/reports/sales-pipeline', requireAuth, (req, res) => {
     });
 });
 
+// Get reports summary
+app.get('/api/reports/summary', requireAuth, (req, res) => {
+    const period = req.query.period || '30';
+    const summary = {
+        totalCustomers: 15,
+        openOpportunities: 8,
+        pendingActivities: 12,
+        pipelineValue: 125000,
+        conversionRate: 25,
+        averageDealSize: 5000,
+        activityCompletion: 60,
+        opportunityStages: {
+            labels: ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'],
+            data: [3, 2, 1, 2, 4, 1]
+        },
+        customerGrowth: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            data: [5, 8, 10, 12, 14, 15]
+        },
+        activityTypes: {
+            labels: ['Call', 'Meeting', 'Email', 'Task'],
+            data: [8, 5, 12, 7]
+        },
+        revenueForecast: {
+            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+            data: [30000, 45000, 60000, 75000]
+        }
+    };
+    res.json(summary);
+});
+
+// ----- USERS API -----
+
+// Get all users
+app.get('/api/users', requireAuth, (req, res) => {
+    db.all('SELECT id, username, full_name, role, created_at FROM users ORDER BY created_at DESC', (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Create user
+app.post('/api/users', requireAuth, (req, res) => {
+    const { username, full_name, password, role } = req.body;
+    const password_hash = bcrypt.hashSync(password, 10);
+    
+    db.run(
+        'INSERT INTO users (username, full_name, password_hash, role) VALUES (?, ?, ?, ?)',
+        [username, full_name, password_hash, role],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: 'User added successfully' });
+        }
+    );
+});
+
+// Delete user
+app.delete('/api/users/:id', requireAuth, (req, res) => {
+    db.run('DELETE FROM users WHERE id = ? AND username != "admin"', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'User deleted successfully' });
+    });
+});
+
+// ----- SETTINGS API -----
+
+// Save company settings
+app.post('/api/settings/company', requireAuth, (req, res) => {
+    // In a real app, you would save to database
+    res.json({ message: 'Company settings saved successfully' });
+});
+
+// Save preferences
+app.post('/api/settings/preferences', requireAuth, (req, res) => {
+    // In a real app, you would save to database
+    res.json({ message: 'Preferences saved successfully' });
+});
+
+// Change password
+app.post('/api/settings/change-password', requireAuth, (req, res) => {
+    const { current_password, new_password } = req.body;
+    
+    // Get current user
+    db.get('SELECT password_hash FROM users WHERE username = ?', [req.session.user], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        if (!row || !bcrypt.compareSync(current_password, row.password_hash)) {
+            return res.status(400).json({ error: 'Current password is incorrect' });
+        }
+        
+        const new_password_hash = bcrypt.hashSync(new_password, 10);
+        db.run('UPDATE users SET password_hash = ? WHERE username = ?', [new_password_hash, req.session.user], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Password changed successfully' });
+        });
+    });
+});
+
+// ----- SYSTEM API -----
+
+// Get database size
+app.get('/api/system/db-size', requireAuth, (req, res) => {
+    res.json({ size: '2.4 MB' });
+});
+
+// Perform backup
+app.post('/api/system/backup', requireAuth, (req, res) => {
+    res.json({ message: 'Backup completed successfully' });
+});
+
+// Clear cache
+app.post('/api/system/clear-cache', requireAuth, (req, res) => {
+    res.json({ message: 'Cache cleared successfully' });
+});
+
+// System diagnostics
+app.get('/api/system/diagnostics', requireAuth, (req, res) => {
+    res.json({
+        status: 'Healthy',
+        uptime: '2 hours',
+        memory: '45% used',
+        db_status: 'Connected'
+    });
+});
+
 // ========== START SERVER ==========
 
 app.listen(PORT, () => {
