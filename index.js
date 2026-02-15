@@ -122,10 +122,58 @@ INSERT OR IGNORE INTO activities (customer_id, opportunity_id, type, subject, de
 VALUES (1, 1, 'meeting', 'Proposal Presentation', 'Present ERP solution proposal to board', '2026-02-20', 'pending', 'high', 'Prepare demo materials');
 `;
 
-db.exec(schema, (err) => {
-    if (err) console.error('Schema error:', err);
-    else console.log('Database schema ready.');
-});
+// Initialize database with schema and sample data
+const initializeDatabase = () => {
+    db.exec(schema, (err) => {
+        if (err) {
+            console.error('Schema error:', err);
+            return;
+        }
+        console.log('Database schema ready.');
+        
+        // Ensure admin user exists
+        db.get('SELECT COUNT(*) as count FROM users WHERE username = "admin"', (err, row) => {
+            if (err) {
+                console.error('Error checking admin user:', err);
+                return;
+            }
+            
+            if (row.count === 0) {
+                // Insert admin user if it doesn't exist
+                db.run(
+                    'INSERT INTO users (username, password_hash, full_name, role) VALUES (?, ?, ?, ?)',
+                    ['admin', '$2b$10$.2XQDThTJSKpl6/.IZvIy.f3KMuWJLfUilNU.6cucQwYDOtze0AlW', 'System Administrator', 'admin'],
+                    function(err) {
+                        if (err) console.error('Error inserting admin user:', err);
+                        else console.log('Admin user created.');
+                    }
+                );
+            }
+            
+            // Ensure at least one sample customer exists
+            db.get('SELECT COUNT(*) as count FROM customers', (err, row) => {
+                if (err) {
+                    console.error('Error checking customers:', err);
+                    return;
+                }
+                
+                if (row.count === 0) {
+                    // Insert sample customer if none exist
+                    db.run(
+                        'INSERT INTO customers (name, phone, email, address, notes) VALUES (?, ?, ?, ?, ?)',
+                        ['ABC Manufacturing', '+1 (555) 123-4567', 'contact@abcmfg.com', '123 Industrial Blvd, City, State 12345', 'Main customer for air conditioning services'],
+                        function(err) {
+                            if (err) console.error('Error inserting sample customer:', err);
+                            else console.log('Sample customer created.');
+                        }
+                    );
+                }
+            });
+        });
+    });
+};
+
+initializeDatabase();
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
@@ -287,6 +335,36 @@ app.post('/api/contacts', requireAuth, (req, res) => {
             res.json({ id: this.lastID, message: 'Contact added successfully' });
         }
     );
+});
+
+// Get single contact
+app.get('/api/contacts/:id', requireAuth, (req, res) => {
+    db.get('SELECT c.*, cu.name as customer_name FROM contacts c LEFT JOIN customers cu ON c.customer_id = cu.id WHERE c.id = ?', [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Contact not found' });
+        res.json(row);
+    });
+});
+
+// Update contact
+app.put('/api/contacts/:id', requireAuth, (req, res) => {
+    const { contact_name, position, phone, email, notes } = req.body;
+    db.run(
+        'UPDATE contacts SET contact_name=?, position=?, phone=?, email=?, notes=? WHERE id=?',
+        [contact_name, position, phone, email, notes, req.params.id],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Contact updated successfully' });
+        }
+    );
+});
+
+// Delete contact
+app.delete('/api/contacts/:id', requireAuth, (req, res) => {
+    db.run('DELETE FROM contacts WHERE id = ?', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Contact deleted successfully' });
+    });
 });
 
 // ----- OPPORTUNITIES API -----
